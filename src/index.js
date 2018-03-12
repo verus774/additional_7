@@ -1,17 +1,43 @@
 module.exports = function solveSudoku(matrix) {
-    for (let i = 0; i < 9; i++) {
-        for (let j = 0; j < 9; j++) {
-            if (matrix[i][j] !== 0) continue;
-            const possibleValues = getPossibleValues(i, j, matrix);
-            const possibleValueCount = possibleValues.length;
+    let minPossibleValueCountCell;
 
-            if (possibleValueCount === 0) return false;
-            if (possibleValueCount === 1) {
-                matrix[i][j] = possibleValues[0];
+    while (true) {
+        minPossibleValueCountCell = null;
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (matrix[i][j] !== 0) continue;
+                const possibleValues = getPossibleValues(i, j, matrix);
+                const possibleValueCount = possibleValues.length;
+
+                if (possibleValueCount === 0) return false;
+                if (possibleValueCount === 1) {
+                    matrix[i][j] = possibleValues[0];
+                }
+
+                if (!minPossibleValueCountCell || possibleValueCount < minPossibleValueCountCell[1].length)
+                    minPossibleValueCountCell = [[i, j], possibleValues];
             }
         }
+        if (!minPossibleValueCountCell)
+            return true;
+        else if (minPossibleValueCountCell[1].length > 1)
+            break;
     }
-    return matrix;
+
+    let [r, c] = minPossibleValueCountCell[0];
+    for (let v of minPossibleValueCountCell[1]) {
+        const matrixCopy = [...matrix];
+        matrixCopy[r][c] = v;
+        if (solveSudoku(matrixCopy)) {
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    matrix[i][j] = matrixCopy[i][j];
+                }
+            }
+            return matrix;
+        }
+    }
+    return false;
 };
 
 function diff(a, b) {
