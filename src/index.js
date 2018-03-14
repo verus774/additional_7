@@ -1,43 +1,20 @@
 module.exports = function solveSudoku(matrix) {
-    let minPossibleValueCountCell;
+    const values = mapPossibleValues(matrix);
+    const matrixCopy = [...matrix];
 
-    while (true) {
-        minPossibleValueCountCell = null;
-        for (let i = 0; i < 9; i++) {
-            for (let j = 0; j < 9; j++) {
-                if (matrix[i][j] !== 0) continue;
-                const possibleValues = getPossibleValues(i, j, matrix);
-                const possibleValueCount = possibleValues.length;
-
-                if (possibleValueCount === 0) return false;
-                if (possibleValueCount === 1) {
-                    matrix[i][j] = possibleValues[0];
-                }
-
-                if (!minPossibleValueCountCell || possibleValueCount < minPossibleValueCountCell[1].length)
-                    minPossibleValueCountCell = [[i, j], possibleValues];
-            }
-        }
-        if (!minPossibleValueCountCell)
-            return true;
-        else if (minPossibleValueCountCell[1].length > 1)
-            break;
-    }
-
-    let [r, c] = minPossibleValueCountCell[0];
-    for (let v of minPossibleValueCountCell[1]) {
-        const matrixCopy = [...matrix];
-        matrixCopy[r][c] = v;
-        if (solveSudoku(matrixCopy)) {
-            for (let i = 0; i < 9; i++) {
-                for (let j = 0; j < 9; j++) {
-                    matrix[i][j] = matrixCopy[i][j];
+    if (values) {
+        for (let obj of values) {
+            let {row, col, values} = obj;
+            for (let v of values) {
+                matrixCopy[row][col] = v;
+                const result = solveSudoku(matrixCopy);
+                if (result) {
+                    return result;
                 }
             }
-            return matrix;
         }
     }
-    return false;
+    return matrix;
 };
 
 function diff(a, b) {
@@ -78,4 +55,20 @@ function getPossibleValues(rowIndex, columnIndex, matrix) {
     values = diff(values, getBlockValues(rowIndex, columnIndex, matrix));
 
     return values;
+}
+
+function mapPossibleValues(matrix) {
+    const res = [];
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            if (matrix[i][j] !== 0) continue;
+
+            const values = getPossibleValues(i, j, matrix);
+            if (values.length === 0) return false;
+            res.push({row: i, col: j, values});
+        }
+    }
+
+    const VALUES_COMPARATOR = (left, right) => left.values.length - right.values.length;
+    return res.sort(VALUES_COMPARATOR);
 }
